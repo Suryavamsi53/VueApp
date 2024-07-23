@@ -502,3 +502,279 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+
+updated view 
+
+
+
+To align the `TransactionList.vue` with the styling and functionality of your `Lookup` component, here's a version of the `TransactionList.vue` that follows a similar structure. This example includes a navbar, CRUD operation buttons, a data table for displaying transactions, and forms for adding, editing, and deleting transactions.
+
+### `TransactionList.vue`
+
+```vue
+<template>
+  <div>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="container">
+        <!-- Transaction Table Button -->
+        <button class="table-button" @click="showTransactionTable">Transaction Table</button>
+
+        <!-- CRUD Operation Buttons -->
+        <div v-if="showCrudButtons" class="crud-buttons">
+          <button class="crud-button" @click="toggleForm('add')">Add Transaction</button>
+          <button class="crud-button" @click="toggleForm('delete')">Delete Transaction</button>
+          <button class="crud-button" @click="toggleTable">Display</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content Area -->
+    <div class="content">
+      <!-- Error message display -->
+      <h3 v-if="errorMsg" class="error-message">{{ errorMsg }}</h3>
+
+      <!-- Data Table -->
+      <div class="data-container" v-if="showTable">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>TransID</th>
+              <th>AccountID</th>
+              <th>TransTypeID</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Transaction Type</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="transaction in paginatedTransactions" :key="transaction.TransID">
+              <td>{{ transaction.TransID }}</td>
+              <td>{{ transaction.AccountID }}</td>
+              <td>{{ transaction.TransTypeID }}</td>
+              <td>{{ transaction.Amount }}</td>
+              <td>{{ transaction.Date }}</td>
+              <td>{{ transaction.Transaction_type }}</td>
+              <td>
+                <button class="action-button edit-button" @click="editTransaction(transaction)">Edit</button>
+                <button class="action-button delete-button" @click="deleteTransaction(transaction.TransID)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination" v-if="transactions.length > pageSize">
+          <button class="pagination-button" @click="prevPage" :disabled="currentPage === 1">Previous</button>
+          <button class="pagination-button" @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        </div>
+      </div>
+
+      <!-- Add Transaction Form -->
+      <div class="form-container" v-if="showAddForm">
+        <h2>Add New Transaction</h2>
+        <form @submit.prevent="addTransaction">
+          <input v-model="newTransaction.AccountID" placeholder="Account ID" required>
+          <input v-model="newTransaction.TransTypeID" placeholder="Transaction Type ID" required>
+          <input v-model="newTransaction.Amount" placeholder="Amount" type="number" step="0.01" required>
+          <input v-model="newTransaction.Date" placeholder="Date" type="date" required>
+          <input v-model="newTransaction.Transaction_type" placeholder="Transaction Type" required>
+          <button class="action-button submit-button" type="submit">Add</button>
+          <button class="action-button cancel-button" type="button" @click="cancelAdd">Cancel</button>
+        </form>
+      </div>
+
+      <!-- Update Transaction Form -->
+      <div class="form-container" v-if="showUpdateForm">
+        <h2>Update Transaction</h2>
+        <form @submit.prevent="updateTransaction">
+          <input v-model="selectedTransaction.TransID" placeholder="TransID" readonly>
+          <input v-model="selectedTransaction.AccountID" placeholder="Account ID" required>
+          <input v-model="selectedTransaction.TransTypeID" placeholder="Transaction Type ID" required>
+          <input v-model="selectedTransaction.Amount" placeholder="Amount" type="number" step="0.01" required>
+          <input v-model="selectedTransaction.Date" placeholder="Date" type="date" required>
+          <input v-model="selectedTransaction.Transaction_type" placeholder="Transaction Type" required>
+          <button class="action-button submit-button" type="submit">Update</button>
+          <button class="action-button cancel-button" type="button" @click="cancelUpdate">Cancel</button>
+        </form>
+      </div>
+
+      <!-- Delete Transaction Form -->
+      <div class="form-container" v-if="showDeleteForm">
+        <h2>Delete Transaction</h2>
+        <form @submit.prevent="deleteTransactionById">
+          <input v-model="currentTransactionId" placeholder="Enter TransID to Delete" required>
+          <button class="action-button submit-button" type="submit">Delete</button>
+          <button class="action-button cancel-button" type="button" @click="cancelDelete">Cancel</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      transactions: [],
+      newTransaction: {
+        AccountID: '',
+        TransTypeID: '',
+        Amount: '',
+        Date: '',
+        Transaction_type: ''
+      },
+      selectedTransaction: {},
+      currentTransactionId: '',
+      showForm: false,
+      showTable: true,
+      showAddForm: false,
+      showUpdateForm: false,
+      showDeleteForm: false,
+      showCrudButtons: true,
+      errorMsg: '',
+      currentPage: 1,
+      pageSize: 10
+    };
+  },
+  computed: {
+    paginatedTransactions() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      return this.transactions.slice(start, start + this.pageSize);
+    },
+    totalPages() {
+      return Math.ceil(this.transactions.length / this.pageSize);
+    }
+  },
+  methods: {
+    fetchTransactions() {
+      fetch('http://localhost:3000/transactions')
+        .then(response => response.json())
+        .then(data => {
+          this.transactions = data;
+        })
+        .catch(error => {
+          this.errorMsg = error.message;
+        });
+    },
+    addTransaction() {
+      fetch('http://localhost:3000/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.newTransaction)
+      })
+        .then(() => {
+          this.fetchTransactions();
+          this.resetForm();
+        })
+        .catch(error => {
+          this.errorMsg = error.message;
+        });
+    },
+    editTransaction(transaction) {
+      this.selectedTransaction = { ...transaction };
+      this.showUpdateForm = true;
+      this.showAddForm = false;
+      this.showDeleteForm = false;
+      this.showTable = false;
+      this.showCrudButtons = false;
+    },
+    updateTransaction() {
+      fetch(`http://localhost:3000/transactions/${this.selectedTransaction.TransID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(this.selectedTransaction)
+      })
+        .then(() => {
+          this.fetchTransactions();
+          this.resetForm();
+        })
+        .catch(error => {
+          this.errorMsg = error.message;
+        });
+    },
+    deleteTransaction(id) {
+      fetch(`http://localhost:3000/transactions/${id}`, {
+        method: 'DELETE'
+      })
+        .then(() => {
+          this.fetchTransactions();
+        })
+        .catch(error => {
+          this.errorMsg = error.message;
+        });
+    },
+    deleteTransactionById() {
+      this.deleteTransaction(this.currentTransactionId);
+      this.resetForm();
+    },
+    toggleForm(formType) {
+      this.resetForm();
+      if (formType === 'add') {
+        this.showAddForm = true;
+      } else if (formType === 'delete') {
+        this.showDeleteForm = true;
+      }
+      this.showTable = false;
+      this.showCrudButtons = false;
+    },
+    toggleTable() {
+      this.showTable = !this.showTable;
+    },
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    },
+    resetForm() {
+      this.newTransaction = { AccountID: '', TransTypeID: '', Amount: '', Date: '', Transaction_type: '' };
+      this.selectedTransaction = {};
+      this.currentTransactionId = '';
+      this.showAddForm = false;
+      this.showUpdateForm = false;
+      this.showDeleteForm = false;
+      this.showTable = true;
+      this.showCrudButtons = true;
+    }
+  },
+  mounted() {
+    this.fetchTransactions();
+  }
+};
+</script>
+
+<style>
+/* Add your styles here */
+.navbar {
+  background-color: #333;
+  color: white;
+  padding: 1rem;
+}
+.table-button, .crud-button {
+  margin-right: 10px;
+}
+.content {
+  margin: 20px;
+}
+.error-message {
+  color: red;
+}
+.data-container {
+  margin-top: 20px;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th, .data-table td {
+  border: 1px solid #ddd;
+
