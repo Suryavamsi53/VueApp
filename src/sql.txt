@@ -1,0 +1,118 @@
+--CREATE DATABASE VuejsApp;
+USE VuejsApp;
+
+CREATE TABLE lookup_table (
+    lookup_id INT PRIMARY KEY,
+    lookup_type VARCHAR(50),
+    lookup_desc VARCHAR(255),
+    is_active CHAR(1),
+    createdby VARCHAR(10) DEFAULT 'system',
+    createdDATE DATETIME DEFAULT GETDATE(),
+    UPDATEDBY VARCHAR(10),
+    UPDATEDDATE DATETIME
+);
+
+INSERT INTO lookup_table (lookup_id, lookup_type, lookup_desc, is_active) VALUES
+(1, 'Account_status', 'Active', 'Y'),
+(2, 'Account_status', 'Inactive', 'N'),
+(3, 'Account_status', 'closed', 'N'),
+(4, 'Account_status', 'suspended', 'Y'),
+(5, 'Address_type', 'office', 'Y'),
+(6, 'Address_type', 'home', 'Y'),
+(7, 'Address_type', 'billing', 'Y'),
+(8, 'Address_type', 'shipping', 'Y'),
+(9, 'Account_type', 'saving', 'Y'),
+(10, 'Account_type', 'checking', 'Y'),
+(11, 'Account_type', 'credit', 'Y'),
+(12, 'Account_type', 'loan', 'Y'),
+(13, 'Transaction_type', 'Deposit', 'Y'),
+(14, 'Transaction_type', 'Withdrawal', 'Y'),
+(15, 'Transaction_type', 'Transfer', 'Y'),
+(16, 'Transaction_type', 'Payment', 'Y');
+
+SELECT * FROM lookup_table;
+
+CREATE TABLE Account_table (
+    AccId INT PRIMARY KEY,
+    AccountNumber VARCHAR(20),
+    AccountStatus_id INT,
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy VARCHAR(50) DEFAULT 'system',
+    UpdatedDate DATETIME,
+    UpdatedBy VARCHAR(50),
+    FOREIGN KEY (AccountStatus_id) REFERENCES lookup_table (lookup_id)
+);
+
+INSERT INTO Account_table (AccID, AccountNumber, AccountStatus_id) VALUES
+(101, '12345678', 1),
+(102, '45678910', 2),
+(103, '11224567', 3),
+(104, '1778080', 4);
+
+SELECT * FROM Account_table;
+
+CREATE TABLE Address_table (
+    AddressID INT PRIMARY KEY,
+    AccountID INT,
+    AddressTypeID INT,
+    Address VARCHAR(255),
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy VARCHAR(50) DEFAULT 'system',
+    UpdatedDate DATETIME,
+    UpdatedBy VARCHAR(50),
+    FOREIGN KEY (AccountID) REFERENCES Account_table (AccID),
+    FOREIGN KEY (AddressTypeID) REFERENCES lookup_table (lookup_id)
+);
+
+INSERT INTO Address_table (AddressID, AccountID, AddressTypeID, Address) VALUES
+(1, 101, 5, '123 main st'),
+(3, 102, 6, '456 oak'),
+(4, 103, 7, '789 pine rd'),
+(5, 104, 8, '321 elm st');
+
+SELECT * FROM Address_table;
+
+CREATE TABLE Account_holder_table (
+    AccHID INT PRIMARY KEY,
+    AccNUM VARCHAR(20),
+    AccTypeID INT,
+    Acc_holders_N VARCHAR(255),
+    AC_Balance DECIMAL(10, 2),
+    CD DATE,
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy VARCHAR(50) DEFAULT 'system',
+    UpdatedDate DATETIME,
+    UpdatedBy VARCHAR(50),
+    FOREIGN KEY (AccTypeID) REFERENCES lookup_table (lookup_id),
+    FOREIGN KEY (AccHID) REFERENCES Account_table (AccID)
+);
+
+INSERT INTO Account_holder_table (AccHID, AccNum, AccTypeID, Acc_holders_N, AC_Balance, CD) VALUES
+(101, '12345678', 9, 'surya', 1000.00, '2020-01-15'),
+(102, '45678910', 10, 'vijay', 2000.00, '2020-06-10'),
+(103, '11224567', 11, 'drushika', 4000.00, '2020-11-25');
+
+SELECT * FROM Account_holder_table;
+
+CREATE TABLE Transaction_Table (
+    TransID INT PRIMARY KEY,
+    AccountID INT,
+    TransTypeID INT,
+    Amount DECIMAL(10, 2),
+    Date DATE,
+    Transaction_type VARCHAR(10),
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy VARCHAR(50) DEFAULT 'system',
+    UpdatedDate DATETIME,
+    UpdatedBy VARCHAR(50),
+    FOREIGN KEY (AccountID) REFERENCES Account_table (AccID),
+    FOREIGN KEY (TransTypeID) REFERENCES lookup_table (lookup_id)
+);
+
+INSERT INTO Transaction_table (TransID, AccountID, TransTypeID, Amount, Date, Transaction_type) VALUES
+(1001, 101, 13, 500.00, '2024-07-01', 'deposit'),
+(1002, 102, 14, 200.00, '2024-07-02', 'withdrawal'),
+(1003, 103, 15, 1000.00, '2024-07-03', 'transfer'),
+(1004, 104, 16, 150.00, '2024-07-04', 'payment');
+
+SELECT * FROM Transaction_Table;
