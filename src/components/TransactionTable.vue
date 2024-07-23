@@ -752,29 +752,147 @@ export default {
 };
 </script>
 
-<style>
-/* Add your styles here */
+
+<style scoped>
+/* Navbar styles */
 .navbar {
-  background-color: #333;
-  color: white;
+  background-color: #4CAF50; /* Dark green background */
   padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
 }
+
 .table-button, .crud-button {
+  background-color: white;
+  color: #4CAF50;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 1rem;
   margin-right: 10px;
 }
-.content {
-  margin: 20px;
+
+.table-button:hover, .crud-button:hover {
+  background-color: #45a049; /* Slightly darker green */
+  color: white;
 }
+
+/* Content area styles */
+.content {
+  padding: 20px;
+}
+
+/* Error message styles */
 .error-message {
   color: red;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
 }
+
+/* Data table styles */
 .data-container {
   margin-top: 20px;
+  overflow-x: auto;
 }
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
 }
+
 .data-table th, .data-table td {
   border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
 
+.data-table th {
+  background-color: #f2f2f2;
+  color: #333;
+}
+
+/* Action button styles */
+.action-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-right: 5px;
+}
+
+.action-button:hover {
+  background-color: #45a049;
+}
+
+/* Form container styles */
+.form-container {
+  margin-top: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+form input {
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+form button {
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.cancel-button {
+  background-color: #f44336;
+  color: white;
+  margin-top: 10px;
+}
+
+.submit-button:hover, .cancel-button:hover {
+  opacity: 0.9;
+}
+
+/* Pagination styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 5px;
+}
+
+.pagination-button:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+</style>
