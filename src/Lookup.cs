@@ -123,3 +123,34 @@ public class LookupService : ILookupService
         }
     }
 }
+
+startup.cs
+
+
+using CoreWCF;
+using Microsoft.Extensions.DependencyInjection;
+
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddServiceModelServices();
+        services.AddServiceModelConfigurationManager();
+    }
+
+    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+    {
+        app.UseRouting();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.UseServiceModel(serviceBuilder =>
+            {
+                serviceBuilder.AddService<LookupService>();
+                serviceBuilder.AddServiceEndpoint<LookupService, ILookupService>(new WSHttpBinding(), "/LookupService");
+            });
+        });
+    }
+}
+
+
