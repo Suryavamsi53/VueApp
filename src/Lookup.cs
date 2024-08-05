@@ -154,3 +154,38 @@ public class Startup
 }
 
 
+
+
+import axios from 'axios';
+
+// Create an Axios instance with the base URL pointing to your WCF service endpoint
+const instance = axios.create({
+  baseURL: 'http://localhost:5000/LookupService', // Replace with your actual service URL
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Define the API methods
+
+// Get all lookups
+export const getLookups = () => {
+  return instance.get('/');
+};
+
+// Add a new lookup
+export const addLookup = (lookup) => {
+  return instance.post('/', lookup);
+};
+
+// Update an existing lookup
+export const updateLookup = (id, lookup) => {
+  return instance.put(`/${id}`, lookup);
+};
+
+// Delete a lookup by ID
+export const deleteLookup = (id) => {
+  return instance.delete(`/${id}`);
+};
+
+export default instance;
