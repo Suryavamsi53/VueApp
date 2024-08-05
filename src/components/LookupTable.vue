@@ -744,3 +744,246 @@ export default {
   </style>
   
    -->
+
+
+
+
+
+<template>
+  <div>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="container">
+        <!-- Lookup Table Button -->
+        <button class="table-button" @click="showLookupTable">Lookup Table</button>
+
+        <!-- CRUD Operation Buttons -->
+        <div v-if="showCrudButtons" class="crud-buttons">
+          <button class="crud-button" @click="toggleForm('add')">Add Data</button>
+          <button class="crud-button" @click="toggleForm('delete')">Delete Data</button>
+          <button class="crud-button" @click="toggleTable">Display</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content Area -->
+    <div class="content">
+      <!-- Error message display -->
+      <h3 v-if="errorMsg" class="error-message">{{ errorMsg }}</h3>
+
+      <!-- Data Table -->
+      <div class="data-container" v-if="showTable">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Lookup Id</th>
+              <th>Lookup Type</th>
+              <th>Lookup Desc</th>
+              <th>Is Active</th>
+              <th>Created By</th>
+              <th>Created Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="lookup in paginatedLookups" :key="lookup.Lookup_Id">
+              <td>{{ lookup.Lookup_Id }}</td>
+              <td>{{ lookup.Lookup_Type }}</td>
+              <td>{{ lookup.Lookup_Desc }}</td>
+              <td>{{ lookup.Is_Active }}</td>
+              <td>{{ lookup.Created_By }}</td>
+              <td>{{ lookup.Created_Date }}</td>
+              <td>
+                <button class="action-button edit-button" @click="editLookup(lookup)">Edit</button>
+                <button class="action-button delete-button" @click="deleteLookup(lookup.Lookup_Id)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination" v-if="lookups.length > pageSize">
+          <button class="pagination-button" @click="prevPage" :disabled="currentPage === 1">Previous</button>
+          <button class="pagination-button" @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        </div>
+      </div>
+
+      <!-- Add Lookup Form -->
+      <div class="form-container" v-if="showAddForm">
+        <h2>Add New Lookup</h2>
+        <form @submit.prevent="addLookup">
+          <input v-model="newLookup.Lookup_Id" placeholder="Lookup ID">
+          <input v-model="newLookup.Lookup_Type" placeholder="Lookup Type">
+          <input v-model="newLookup.Lookup_Desc" placeholder="Lookup Description">
+          <input v-model="newLookup.Is_Active" placeholder="Is Active">
+          <input v-model="newLookup.Created_By" placeholder="Created By">
+          <input v-model="newLookup.Created_Date" placeholder="Created Date">
+          <button class="action-button submit-button" type="submit">Add</button>
+          <button class="action-button cancel-button" type="button" @click="cancelAdd">Cancel</button>
+        </form>
+      </div>
+
+      <!-- Update Lookup Form -->
+      <div class="form-container" v-if="showUpdateForm">
+        <h2>Update Lookup</h2>
+        <form @submit.prevent="updateLookup">
+          <input v-model="selectedLookup.Lookup_Id" placeholder="Lookup ID" readonly>
+          <input v-model="selectedLookup.Lookup_Type" placeholder="Lookup Type">
+          <input v-model="selectedLookup.Lookup_Desc" placeholder="Lookup Description">
+          <input v-model="selectedLookup.Is_Active" placeholder="Is Active">
+          <button class="action-button submit-button" type="submit">Update</button>
+          <button class="action-button cancel-button" type="button" @click="cancelUpdate">Cancel</button>
+        </form>
+      </div>
+
+      <!-- Delete Lookup Form -->
+      <div class="form-container" v-if="showDeleteForm">
+        <h2>Delete Lookup</h2>
+        <form @submit.prevent="deleteLookupById">
+          <input v-model="currentLookupId" placeholder="Enter Lookup ID to Delete">
+          <button class="action-button submit-button" type="submit">Delete</button>
+          <button class="action-button cancel-button" type="button" @click="cancelDelete">Cancel</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from '../axios.js'; // Import the configured axios instance
+
+export default {
+  data() {
+    return {
+      lookups: [],
+      newLookup: {
+        Lookup_Id: '',
+        Lookup_Type: '',
+        Lookup_Desc: '',
+        Is_Active: '',
+        Created_By: '',
+        Created_Date: ''
+      },
+      selectedLookup: {},
+      showCrudButtons: false,
+      showTable: false,
+      showAddForm: false,
+      showUpdateForm: false,
+      showDeleteForm: false,
+      errorMsg: '',
+      pageSize: 10,
+      currentPage: 1
+    };
+  },
+  computed: {
+    paginatedLookups() {
+      const start = (this.currentPage - 1) * this.pageSize;
+      return this.lookups.slice(start, start + this.pageSize);
+    },
+    totalPages() {
+      return Math.ceil(this.lookups.length / this.pageSize);
+    }
+  },
+  methods: {
+    showLookupTable() {
+      this.showCrudButtons = true;
+      this.showTable = false;
+      this.showAddForm = false;
+      this.showUpdateForm = false;
+      this.showDeleteForm = false;
+    },
+    toggleForm(formType) {
+      this.showAddForm = formType === 'add';
+      this.showDeleteForm = formType === 'delete';
+      this.showUpdateForm = false;
+      this.errorMsg = '';
+    },
+    toggleTable() {
+      this.showTable = !this.showTable;
+    },
+    fetchLookups() {
+      axios.get('/lookups')
+        .then(response => {
+          this.lookups = response.data;
+        })
+        .catch(error => {
+          this.errorMsg = 'Error fetching lookups';
+        });
+    },
+    addLookup() {
+      axios.post('/lookups', this.newLookup)
+        .then(() => {
+          this.fetchLookups();
+          this.resetForm();
+        })
+        .catch(error => {
+          this.errorMsg = 'Error adding lookup';
+        });
+    },
+    updateLookup() {
+      axios.put(`/lookups/${this.selectedLookup.Lookup_Id}`, this.selectedLookup)
+        .then(() => {
+          this.fetchLookups();
+          this.resetForm();
+        })
+        .catch(error => {
+          this.errorMsg = 'Error updating lookup';
+        });
+    },
+    deleteLookupById() {
+      axios.delete(`/lookups/${this.currentLookupId}`)
+        .then(() => {
+          this.fetchLookups();
+          this.resetForm();
+        })
+        .catch(error => {
+          this.errorMsg = 'Error deleting lookup';
+        });
+    },
+    editLookup(lookup) {
+      this.selectedLookup = { ...lookup };
+      this.showUpdateForm = true;
+      this.showAddForm = false;
+      this.showDeleteForm = false;
+      this.errorMsg = '';
+    },
+    deleteLookup(lookupId) {
+      this.currentLookupId = lookupId;
+      this.showDeleteForm = true;
+      this.showUpdateForm = false;
+      this.showAddForm = false;
+      this.errorMsg = '';
+    },
+    resetForm() {
+      this.newLookup = {
+        Lookup_Id: '',
+        Lookup_Type: '',
+        Lookup_Desc: '',
+        Is_Active: '',
+        Created_By: '',
+        Created_Date: ''
+      };
+      this.selectedLookup = {};
+      this.showAddForm = false;
+      this.showUpdateForm = false;
+      this.showDeleteForm = false;
+      this.errorMsg = '';
+    },
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    }
+  },
+  mounted() {
+    this.fetchLookups();
+  }
+};
+</script>
+
+<style>
+/* Add your styles here */
